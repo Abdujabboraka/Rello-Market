@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Cart{% endblock %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <h4 class="mb-3 fw-bold">Shopping Cart</h4>
+
+    {% if items %}
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle text-center">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+            {{ order.status }}
+                {% for item in items %}
+                <tr id="item-{{ item.id }}">
+                    <td class="text-start">
+                        {% if item.product.image %}
+                            <img src="{{ item.product.image.url }}" width="50" class="me-2 rounded">
+                        {% endif %}
+                        {{ item.product.name }}
+                    </td>
+                    <td>${{ item.product.price }}</td>
+                    <td>
+                        <div class="d-flex justify-content-center align-items-center">
+                            <button class="btn btn-sm btn-outline-secondary me-1 update-qty" data-id="{{ item.id }}" data-action="minus">-</button>
+                            <span id="qty-{{ item.id }}">{{ item.quantity }}</span>
+                            <button class="btn btn-sm btn-outline-secondary ms-1 update-qty" data-id="{{ item.id }}" data-action="plus">+</button>
+                        </div>
+                    </td>
+                    <td id="total-{{ item.id }}">${{ item.product.price|floatformat:2|add:"0"|floatformat:2|floatformat:2|floatformat:"0" }}</td>
+                    <td>
+                        <button class="btn btn-sm btn-danger remove-item" data-id="{{ item.id }}">Remove</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <h5 class="mt-3">Total: $<span id="cart-total">{{ total }}</span></h5>
+
+    <div class="mt-3">
+        <a href="{% url 'order_page' %}" class="btn btn-success btn-lg">Proceed to Checkout</a>
+        <button class="btn btn-outline-danger btn-lg" id="clear-cart">Clear Cart</button>
+    </div>
+
+    {% else %}
+    <p>Your cart is empty.</p>
+    {% endif %}
+
+</div>
+
+<!-- CSS -->
+<style>
+.update-qty, .remove-item, #clear-cart {
+    transition: 0.2s ease;
+}
+.update-qty:hover, .remove-item:hover, #clear-cart:hover {
+    transform: scale(1.05);
+}
+</style>
+
+<!-- AJAX -->
+<script>
+function updateCartTotals() {
+    let total = 0;
+    document.querySelectorAll('tr[id^="item-"]').forEach(tr => {
+        const id = tr.id.split('-')[1];
+        const qty = parseInt(document.getElementById('qty-'+id).innerText);
+        const price = parseFloat(tr.querySelector('td:nth-child(2)').innerText.replace('$',''));
+        document.getElementById('total-'+id).innerText = '$' + (qty * price).toFixed(2);
+        total += qty * price;
+    });
+    document.getElementById('cart-total').innerText = total.toFixed(2);
+}
+
+document.querySelectorAll('.update-qty').forEach(btn => {
+    btn.addEventListener('click', function(){
+        const itemId = this.dataset.id;
+        const action = this.dataset.action;
+
+        fetch(`/cart/update/${itemId}/?action=${action}`)
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'ok'){
+                document.getElementById('qty-'+itemId).innerText = data.quantity;
+                updateCartTotals();
+            }
+        });
+    });
+});
+
+document.querySelectorAll('.remove-item').forEach(btn => {
+    btn.addEventListener('click', function(){
+        const itemId = this.dataset.id;
+
+        fetch(`/cart/remove/${itemId}/`)
+        .then(() => {
+            document.getElementById('item-'+itemId).remove();
+            updateCartTotals();
+        });
+    });
+});
+
+document.getElementById('clear-cart').addEventListener('click', function(){
+    fetch(`/cart/clear/`)
+    .then(() => location.reload());
+});
+</script>
+
+{% endblock %}
