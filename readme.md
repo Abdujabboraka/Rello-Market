@@ -58,21 +58,18 @@ Below are sample UI previews of **Rello Market**:
 
 ### **Frontend**
 - HTML5, CSS3, JavaScript  
-- (Optional: React)
 
 ### **Backend**
-- Django (recommended)  
-- REST API (DRF optional)
+- Django 
 
-### **Database**
-- PostgreSQL (recommended)  
-- MySQL support
+### **Database** 
+- MySQL 
 
 ### **Telegram Bot**
-- Python (**telebot** or aiogram)
+- Python (**telebot**)
 
 ### **Hosting**
-- PythonAnywhere / Render / VDS
+- A-host
 
 ---
 
